@@ -17,3 +17,5 @@ Handles Json with one key
 - [ ] handle escapes in strings
 - [ ] make string state
 - [ ] handle whitespace
+- [ ] pull string logic into its own module
+- [ ] empty string case
