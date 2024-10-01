@@ -11,6 +11,8 @@ pub enum Error {
     Unmatched(char),
     /// unrecognized character {0:?}
     Unrecognized(char),
+    /// unexpected character {0:?} after json finished
+    CharacterAfterEnd(char),
     /// {0}
     Custom(String),
 }

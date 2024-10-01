@@ -33,7 +33,7 @@ pub fn parse(json: &str) -> Result<HashMap<String, String>> {
                 invalid => return Err(Error::Unrecognized(invalid)),
             },
 
-            State::End => return Err(format!("invalid character {c:?}"))?,
+            State::End => return Err(Error::CharacterAfterEnd(c)),
         }
     }
 
@@ -66,6 +66,6 @@ mod tests {
 
     #[test]
     fn finished_object_then_another_char() {
-        assert!(parse("{}{").is_err_and(|e| e.to_string().contains("invalid")));
+        assert_eq!(parse("{}{").unwrap_err(), Error::CharacterAfterEnd('{'));
     }
 }
