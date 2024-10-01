@@ -1,1 +1,65 @@
+use std::collections::HashMap;
 
+type Error = Box<dyn std::error::Error>;
+type Result<T> = std::result::Result<T, Error>;
+
+enum State {
+    Init,
+    Object,
+    End,
+}
+
+pub fn parse(json: &str) -> Result<HashMap<String, String>> {
+    let mut state = State::Init;
+
+    if json.is_empty() {
+        Err("json must not be empty")?;
+    }
+
+    for c in json.chars() {
+        match state {
+            State::Init => match c {
+                '{' => {
+                    state = State::Object;
+                }
+                invalid => return Err(format!("unrecognized character {invalid:?}"))?,
+            },
+            State::Object => match c {
+                '}' => {
+                    state = State::End;
+                }
+                invalid => return Err(format!("unrecognized character {invalid:?}"))?,
+            },
+
+            State::End => return Err(format!("invalid character {c:?}"))?,
+        }
+    }
+
+    Ok(HashMap::new())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty() {
+        assert!(parse("").is_err_and(|message| message.to_string().contains("empty")));
+    }
+
+    #[test]
+    fn unrecognized() {
+        assert!(parse("}").is_err_and(|message| message.to_string().contains("unrecognized")));
+        assert!(parse("a").is_err_and(|message| message.to_string().contains("unrecognized")));
+    }
+
+    #[test]
+    fn empty_object() {
+        assert_eq!(parse("{}").unwrap(), HashMap::new());
+    }
+
+    #[test]
+    fn finished_object_then_another_char() {
+        assert!(parse("{}{").is_err_and(|e| e.to_string().contains("invalid")));
+    }
+}
