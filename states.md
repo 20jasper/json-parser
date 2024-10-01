@@ -1,4 +1,4 @@
-Handles Json with one key
+Handles Json with one key with string values
 
 ## states
 
