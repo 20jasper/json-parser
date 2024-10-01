@@ -24,13 +24,13 @@ pub fn parse(json: &str) -> Result<HashMap<String, String>> {
                     state = State::Object;
                 }
                 '}' => return Err(Error::Unmatched(c)),
-                invalid => return Err(format!("unrecognized character {invalid:?}"))?,
+                invalid => return Err(Error::Unrecognized(invalid)),
             },
             State::Object => match c {
                 '}' => {
                     state = State::End;
                 }
-                invalid => return Err(format!("unrecognized character {invalid:?}"))?,
+                invalid => return Err(Error::Unrecognized(invalid)),
             },
 
             State::End => return Err(format!("invalid character {c:?}"))?,
@@ -51,8 +51,12 @@ mod tests {
 
     #[test]
     fn unrecognized() {
+        assert_eq!(parse("a").unwrap_err(), Error::Unrecognized('a'));
+    }
+
+    #[test]
+    fn unmatched() {
         assert_eq!(parse("}").unwrap_err(), Error::Unmatched('}'));
-        assert!(parse("a").is_err_and(|message| message.to_string().contains("unrecognized")));
     }
 
     #[test]

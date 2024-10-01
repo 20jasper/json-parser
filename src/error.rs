@@ -9,6 +9,8 @@ pub enum Error {
     Empty,
     /// unmatched character {0:?}
     Unmatched(char),
+    /// unrecognized character {0:?}
+    Unrecognized(char),
     /// {0}
     Custom(String),
 }
