@@ -17,14 +17,11 @@ pub enum Error {
     Custom(String),
 }
 
-impl From<&str> for Error {
-    fn from(value: &str) -> Self {
+impl<S> From<S> for Error
+where
+    S: Into<String>,
+{
+    fn from(value: S) -> Self {
         Self::Custom(value.into())
-    }
-}
-
-impl From<String> for Error {
-    fn from(value: String) -> Self {
-        Self::Custom(value)
     }
 }
