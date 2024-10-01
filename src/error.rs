@@ -7,6 +7,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     /// Json may not be empty
     Empty,
+    /// unmatched character {0:?}
+    Unmatched(char),
     /// {0}
     Custom(String),
 }

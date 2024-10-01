@@ -23,6 +23,7 @@ pub fn parse(json: &str) -> Result<HashMap<String, String>> {
                 '{' => {
                     state = State::Object;
                 }
+                '}' => return Err(Error::Unmatched(c)),
                 invalid => return Err(format!("unrecognized character {invalid:?}"))?,
             },
             State::Object => match c {
@@ -50,7 +51,7 @@ mod tests {
 
     #[test]
     fn unrecognized() {
-        assert!(parse("}").is_err_and(|message| message.to_string().contains("unrecognized")));
+        assert_eq!(parse("}").unwrap_err(), Error::Unmatched('}'));
         assert!(parse("a").is_err_and(|message| message.to_string().contains("unrecognized")));
     }
 
