@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-type Error = Box<dyn std::error::Error>;
-type Result<T> = std::result::Result<T, Error>;
+mod error;
+
+use error::{Error, Result};
 
 enum State {
     Init,
@@ -13,7 +14,7 @@ pub fn parse(json: &str) -> Result<HashMap<String, String>> {
     let mut state = State::Init;
 
     if json.is_empty() {
-        Err("json must not be empty")?;
+        return Err(Error::Empty);
     }
 
     for c in json.chars() {
@@ -44,7 +45,7 @@ mod tests {
 
     #[test]
     fn empty() {
-        assert!(parse("").is_err_and(|message| message.to_string().contains("empty")));
+        assert_eq!(parse("").unwrap_err(), Error::Empty);
     }
 
     #[test]
