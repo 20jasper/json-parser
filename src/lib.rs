@@ -1,3 +1,4 @@
+use core::{iter::Peekable, str::CharIndices};
 use std::collections::HashMap;
 
 mod error;
@@ -24,7 +25,8 @@ pub fn parse(json: &str) -> Result<HashMap<String, String>> {
     let mut key = None::<String>;
     let mut value = None::<String>;
 
-    for c in json.chars() {
+    let mut chars = json.char_indices().peekable();
+    while let Some((i, c)) = chars.next() {
         match state {
             State::Init => match c {
                 '{' => {
@@ -39,27 +41,29 @@ pub fn parse(json: &str) -> Result<HashMap<String, String>> {
                 }
                 '"' => {
                     state = State::Key;
-                    key = Some("".into());
                 }
                 invalid => return Err(Error::Unrecognized(invalid)),
             },
             State::Key => match c {
                 '"' => state = State::KeyEnd,
-                other => key.as_mut().unwrap().push(other),
+                _ => {
+                    key = Some(build_str_while(i, json, &mut chars).into());
+                }
+            },
+            State::KeyEnd => match c {
+                ':' => state = State::ValueStart,
+                invalid => return Err(Error::Unrecognized(invalid)),
             },
             State::Value => match c {
                 '"' => state = State::Object,
-                other => value.as_mut().unwrap().push(other),
+                _ => {
+                    value = Some(build_str_while(i, json, &mut chars).into());
+                }
             },
             State::ValueStart => match c {
                 '"' => {
                     state = State::Value;
-                    value = Some("".into());
                 }
-                invalid => return Err(Error::Unrecognized(invalid)),
-            },
-            State::KeyEnd => match c {
-                ':' => state = State::ValueStart,
                 invalid => return Err(Error::Unrecognized(invalid)),
             },
             State::End => return Err(Error::CharacterAfterEnd(c)),
@@ -73,6 +77,20 @@ pub fn parse(json: &str) -> Result<HashMap<String, String>> {
     }
 
     Ok(map)
+}
+
+fn build_str_while<'a>(
+    start: usize,
+    input: &'a str,
+    chars: &mut Peekable<CharIndices<'a>>,
+) -> &'a str {
+    let mut end = start;
+
+    while let Some((i, c)) = chars.next_if(|(_, c)| *c != '"') {
+        end = i + c.len_utf8();
+    }
+
+    &input[start..end]
 }
 
 #[cfg(test)]
@@ -113,8 +131,8 @@ mod tests {
     #[test]
     fn key_with_braces() {
         assert_eq!(
-            parse(r#"{"h{}{}i":""}"#).unwrap(),
-            [("h{}{}i", "")]
+            parse(r#"{"h{}{}i":"bye"}"#).unwrap(),
+            [("h{}{}i", "bye")]
                 .into_iter()
                 .map(|(k, v)| (k.into(), v.into()))
                 .collect()
